@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>🌙 Fahim এর ঈদ সালামি Wheel</title>
 <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;600;700;800&family=Cinzel+Decorative:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{--gold:#f5c842;--gold-dark:#c9961a;--green-deep:#071f10;--green-mid:#1a6b3a;--green-light:#2d9e56;--cream:#fdf6e3;--radius-card:20px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -397,12 +398,60 @@ function showAlreadyCard(label){
 
 // ===== SCREENSHOT =====
 function takeScreenshot(){
-  // Flash effect
-  const fl=document.getElementById('flash');
-  fl.classList.add('go');
-  setTimeout(()=>fl.classList.remove('go'),200);
-  // Show hint
-  alert('📸 এখন তোমার ডিভাইসের স্ক্রিনশট বাটন চাপো!\n\nAndroid: Power + Volume Down\niPhone: Power + Volume Up (বা Side + Volume Up)');
+  const btn = document.querySelector('.screenshot-btn');
+  const overlay = document.getElementById('resultOverlay');
+
+  // Disable button & show loading
+  btn.disabled = true;
+  btn.textContent = '⏳ তৈরি হচ্ছে...';
+
+  // Hide overlay temporarily, capture full page, then restore
+  overlay.style.display = 'none';
+
+  // Small delay so overlay hides before capture
+  setTimeout(() => {
+    html2canvas(document.body, {
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#071f10',
+      scale: window.devicePixelRatio || 2,
+      logging: false,
+      width: document.body.scrollWidth,
+      height: window.innerHeight,
+      windowWidth: document.body.scrollWidth,
+      windowHeight: window.innerHeight,
+      y: window.scrollY,
+    }).then(capturedCanvas => {
+      // Flash effect
+      const fl = document.getElementById('flash');
+      fl.classList.add('go');
+      setTimeout(() => fl.classList.remove('go'), 150);
+
+      // Show overlay again
+      overlay.style.display = 'flex';
+      btn.disabled = false;
+      btn.textContent = '📸 স্ক্রিনশট নাও';
+
+      // Try download
+      try {
+        const link = document.createElement('a');
+        link.download = 'eid-salami-fahim.png';
+        link.href = capturedCanvas.toDataURL('image/png');
+        link.click();
+      } catch(e) {
+        // Fallback: open in new tab
+        const newTab = window.open();
+        if(newTab) {
+          newTab.document.write(`<img src="${capturedCanvas.toDataURL()}" style="max-width:100%">`);
+        }
+      }
+    }).catch(err => {
+      overlay.style.display = 'flex';
+      btn.disabled = false;
+      btn.textContent = '📸 স্ক্রিনশট নাও';
+      alert('স্ক্রিনশট নিতে পারিনি 😔\nম্যানুয়ালি স্ক্রিনশট নাও:\nAndroid: Power + Volume Down\niPhone: Side + Volume Up');
+    });
+  }, 100);
 }
 
 // ===== LOAD CHECK =====
